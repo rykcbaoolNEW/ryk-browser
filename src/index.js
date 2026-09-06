@@ -6,6 +6,7 @@ import path from "node:path";
 import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
+import psl from "psl";
 
 import { scramjetPath } from "@mercuryworkshop/scramjet/path";
 import { libcurlPath } from "@mercuryworkshop/libcurl-transport";
@@ -120,6 +121,7 @@ const blockedDomains = [
 function isBlockedDomain(domain) {
     domain = domain.toLowerCase().trim();
 
+
     // Block exact domains
     if (blockedDomains.includes(domain)) {
         return false;
@@ -137,7 +139,7 @@ function isBlockedDomain(domain) {
 
 fastify.get("/tls-check", async (request, reply) => {
     const ip = request.ip === "::1" ? "127.0.0.1" : request.ip;
-
+    const ENABLE_LOG = true;
     if (ip !== "127.0.0.1") {
         return reply.sendError
             ? reply.sendError(403)
