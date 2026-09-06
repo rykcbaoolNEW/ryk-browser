@@ -118,7 +118,9 @@ fastify.addHook("onRequest", (req, reply, done) => {
 
 
 fastify.get("/tls-check", async (request, reply) => {
-    const ip = request.ip === "::1" ? "127.0.0.1" : request.ip;
+    const ip = request.ip.replace(/^::ffff:/, "") === "::1"
+        ? "127.0.0.1"
+        : request.ip.replace(/^::ffff:/, "");
     const ENABLE_LOG = true;
     if (ip !== "127.0.0.1") {
         return reply.sendError
