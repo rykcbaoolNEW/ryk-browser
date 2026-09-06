@@ -113,6 +113,62 @@ fastify.addHook("onRequest", (req, reply, done) => {
     done();
 });
 
+const blockedDomains = [
+    "example.com",
+];
+
+function isBlockedDomain(domain) {
+    domain = domain.toLowerCase().trim();
+
+    // Block exact domains
+    if (blockedDomains.includes(domain)) {
+        return false;
+    }
+
+    // Block subdomains of blocked domains
+    for (const blocked of blockedDomains) {
+        if (domain.endsWith("." + blocked)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fastify.get("/tls-check", async (request, reply) => {
+    const ip = request.ip === "::1" ? "127.0.0.1" : request.ip;
+
+    if (ip !== "127.0.0.1") {
+        return reply.sendError
+            ? reply.sendError(403)
+            : reply.code(403).send();
+    }
+
+    const domain = String(request.query?.domain || "").toLowerCase();
+
+    if (!domain) {
+        return reply.code(403).send();
+    }
+
+    const parsed = psl.parse(domain);
+
+    if (parsed.error) {
+        return reply.code(403).send();
+    }
+
+
+    // ALLOWLIST CHECK
+    if (isBlockedDomain(domain)) {
+        return reply.code(403).send();
+    }
+
+    if (ENABLE_LOG) {
+        console.log("TLS CHECK:", domain);
+    }
+
+    return reply.code(200).send();
+});
+
 fastify.register(fastifyStatic, {
     root: publicPath,
     decorateReply: true,
