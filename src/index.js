@@ -22,6 +22,11 @@ const PROXY_PREFIXES = [
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const visitors = new Map();
+
+const ACTIVE_TIMEOUT = 30_000;
+
+
 let publicPath = path.resolve(process.cwd(), "public");
 
 if (!fs.existsSync(path.join(publicPath, "index.html"))) {
@@ -55,6 +60,47 @@ const fastify = Fastify({
                 }
             });
     },
+});
+
+fastify.post("/api/online", (req, reply) => {
+    const { id } = req.body || {};
+
+    if (id) {
+        visitors.set(id, {
+            lastSeen: Date.now(),
+            host: req.headers.host
+        });
+    }
+
+    reply.send({ ok: true });
+});
+
+
+fastify.get("/api/online", (req, reply) => {
+    const now = Date.now();
+
+    // Remove inactive users
+    for (const [id, visitor] of visitors) {
+        if (now - visitor.lastSeen > ACTIVE_TIMEOUT) {
+            visitors.delete(id);
+        }
+    }
+
+    const currentHost = req.headers.host;
+
+    // Count users on this specific BYOD domain
+    let siteActiveUsers = 0;
+
+    for (const visitor of visitors.values()) {
+        if (visitor.host === currentHost) {
+            siteActiveUsers++;
+        }
+    }
+
+    reply.send({
+        globalActiveUsers: visitors.size,
+        siteActiveUsers
+    });
 });
 
 fastify.addHook("onRequest", (req, reply, done) => {

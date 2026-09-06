@@ -6,6 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
     <title>New tab</title>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FMJX7PY4JR"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-FMJX7PY4JR');
+    </script>
+    <script>
+        (() => {
+            let id = localStorage.getItem("siteOnlineId");
+
+            if (!id) {
+                id = crypto.randomUUID();
+                localStorage.setItem("siteOnlineId", id);
+            }
+
+            async function updateOnline() {
+                try {
+                    // Tell the server we're still online
+                    await fetch("/api/online", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ id })
+                    });
+
+                    // Get current counts
+                    const response = await fetch("/api/online");
+                    const data = await response.json();
+
+                    document.getElementById("global-online").textContent =
+                        data.globalActiveUsers;
+
+                    document.getElementById("site-online").textContent =
+                        data.siteActiveUsers;
+
+                } catch (err) {
+                    console.error("Online counter error:", err);
+                }
+            }
+
+            updateOnline();
+
+            // Update every 10 seconds
+            setInterval(updateOnline, 10000);
+        })();
+    </script>
     <link rel="icon" type="image/png" sizes="any" media="(prefers-color-scheme: light)"
         href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAD04JH5AAAAZlBMVEUAAABAQEA4QEg4QEA6QEU6QEA8QEQ8QEA9QEM+QEM6QEI7QEQ7QEI8QEQ8QEI8QEQ8QEI9QEQ9QEI8QEM8QEI7QEM7QEM8QEM8QEM8QEQ8QEM9QEM9QEI7QEM7QEI8QEM8QEI8QEOBp9B1AAAAIXRSTlMAECAgMDBAQFBfYHBwf3+AgI+PkJCfoK+/z8/f39/f7+84OiXtAAAB70lEQVR42u3azU7jMBRA4SSeJmmHGX5MwEBLct//JTldWLIMsVNgYVf3W1WQKmdx1dhuG6WUusQAixfMEAFmOFgM0IDrCzjgDbLRCXtoQP0BHRzkm07ooAF1BuwxQ35oxggNqCtghPyyPTSgnoA3yC+b0UED6gi4gaxYcIsR5kItNKCOgDMHiVi0aH5AA8oOmOBf95DAXzSBFjsM+CpqSNCAMgP8DcMLniG4Q3jjB8yQwITwYWMhKwZoQHkBjxCc4IfK4BXhZjW1WPHv9aELBDELDSgvwEEQD90O/vUTJOMe/vpbCGKv0IDyAsKBmdEifvhIRvzeEWvXaEB5ARKZ8OlhtZEfXANZoQHlB8QLhz+QjQZoQH0BCyTi0CBaYGS1SA3uDA0oL+AFuUNmC8mYkFvAOGhAeQGP2LLZOEJWvMMgd+htoQHlBfTYstkwiIdrQXyI+Q+yYoAGlBXgpQbsBvFGpccO/sZeh9SgNtCAMgMOkIT/aJLyBxl7aEC5AWcOknDChAEGZx3CQ63cAGpA2QEGC+QCWxYhCww0oPyAS3/INGHLB9mIBhpQR4CPWCDIbURSX2gt8DfXgLoCzgyO2LK4eIBEHHygBtQZ4B1wxNriokP8vzBOA+oP8HpYOIwIDyMcLHr4v2vA9QUopa7SBwy1hh79c1UmAAAAAElFTkSuQmCC">
 
@@ -1107,6 +1157,7 @@
     <div id="app">
         <button id="collapse-btn" class="icon-btn" title="Hide toolbar"></button>
 
+
         <div id="tabbar">
             <div id="tabs"></div>
             <button id="newtab-btn" class="icon-btn" title="New tab">+</button>
@@ -1141,6 +1192,11 @@
 
         <div id="url-suggest"></div>
         <div id="site-panel"></div>
+
+        <div id="online-stats">
+            <span><span id="global-online">0</span> online globally</span>
+            <span><span id="site-online">0</span> on this site</span>
+        </div>
     </div>
 
     <div id="ctx-menu"></div>
@@ -1196,17 +1252,9 @@
         );
 
         const GAMES = [
-            ['3kh0 (Echo) Games', 'https://lite.3kh0.net/'],
-            ['RETRO GAMES', 'https://theooofficial.github.io/myRETROGAMES/'],
-            ['Bin Bash Games', 'https://bidoofery.github.io/gfiles/list.html'],
-            ['Native Games', 'https://bidoofery.github.io/nativegames/'],
-            ['GAMEBOY Advance Games', 'https://bidoofery.github.io/gam3b0y/'],
-            ['GBA Online Games', 'https://gba.js.org/'],
-            ['OutRed Games', 'https://outred.org/games.html'],
-            ['GBA Emulator Games', 'https://theclashman2.github.io/GBA-Emulator/'],
-            ['Unblocked Games World', 'https://sites.google.com/site/thegamecompilation/home?authuser=0'],
-            ['Now.gg Games', 'https://now.gg/'],
-            ['Dancing Bunny Games', 'https://ltorl.github.io/dancing-bunny/public/v2.html'],
+            ['duck math', 'https://duck.rykiscool.org/'],
+            ['gn math', 'https://services.keeweb.info/favicon/xn--jhb.neocities.org']
+
         ];
 
         const BAREMUX_WORKER = URL.createObjectURL(new Blob(
@@ -2225,7 +2273,7 @@ self.addEventListener("fetch", (event) => {
 
             const title = document.createElement('h1');
             title.className = 'nt-title';
-            title.textContent = 'Altior Browser';
+            title.textContent = 'ryks browser';
 
             const group = document.createElement('div');
             group.className = 'nt-input-group';
